@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: workPlans
+    // Fields:
+    //   - department: string (required, 1-100 chars)
+    //   - projectName: string (required, 1-200 chars)
+    //   - date: string (required, YYYY-MM-DD)
+    //   - isImplemented: bool (required)
+    //   - content: string (required, 1-2000 chars)
+    //   - workers: list (optional, items are maps with name/rank)
+    //   - authorUid: string (optional)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // Collection: projectContacts
+    // Fields:
+    //   - department: string (required)
+    //   - projectName: string (required)
+    //   - contacts: list (required, items are maps with role/name/phone/type/category)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "ixwon01@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidWorkPlan(data) {
+      return data.keys().hasAll(['department', 'projectName', 'date', 'isImplemented', 'content', 'createdAt']) &&
+             data.department is string && data.department.size() > 0 && data.department.size() < 100 &&
+             data.projectName is string && data.projectName.size() > 0 && data.projectName.size() < 200 &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.isImplemented is bool &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 2000 &&
+             data.createdAt is string &&
+             (!('authorUid' in data) || data.authorUid is string) &&
+             (!('workers' in data) || data.workers is list);
+    }
+
+    function isValidProjectContact(data) {
+      return data.keys().hasAll(['department', 'projectName', 'contacts']) &&
+             data.department is string &&
+             data.projectName is string &&
+             data.contacts is list;
+    }
+
+    match /workPlans/{planId} {
+      // Allow everyone to read and write (unauthenticated access)
+      allow read, write: if true;
+    }
+
+    match /projectContacts/{contactId} {
+      // Allow everyone to read and write (unauthenticated access)
+      allow read, write: if true;
+    }
+
+    match /users/{userId} {
+      // Allow everyone to read and write (unauthenticated access)
+      allow read, write: if true;
+    }
+    
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

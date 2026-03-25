@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "WorkPlan": {
+      "title": "WorkPlan",
+      "description": "A holiday work plan for a specific project and date.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "department": { "type": "string" },
+        "projectName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "isImplemented": { "type": "boolean" },
+        "content": { "type": "string" },
+        "workers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "rank": { "type": "string" }
+            }
+          }
+        },
+        "authorUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["department", "projectName", "date", "isImplemented", "content"]
+    },
+    "ProjectContact": {
+      "title": "ProjectContact",
+      "description": "Contact information for a project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "department": { "type": "string" },
+        "projectName": { "type": "string" },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["internal", "external"] },
+              "category": { "type": "string" },
+              "role": { "type": "string" },
+              "name": { "type": "string" },
+              "phone": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/workPlans/{planId}": {
+      "schema": "WorkPlan",
+      "description": "Collection of holiday work plans."
+    },
+    "/contacts/{contactId}": {
+      "schema": "ProjectContact",
+      "description": "Collection of project contacts."
+    }
+  }
+}
